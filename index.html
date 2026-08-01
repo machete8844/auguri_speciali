@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tanti Auguri! ❤️</title>
+  
+  <!-- Font Google -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Sacramento&display=swap" rel="stylesheet">
+
+  <!-- Mappa Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+      min-height: 100vh;
+      color: #4a4a4a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 15px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* --- PLAYER MANAGER MUSICA --- */
+    .music-player {
+      position: fixed;
+      top: 15px;
+      right: 15px;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 10px 15px;
+      border-radius: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      max-width: 220px;
+    }
+
+    .track-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #e85d75;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 180px;
+    }
+
+    .player-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .player-btn {
+      background: #e85d75;
+      color: white;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(232, 93, 117, 0.4);
+      transition: transform 0.2s ease;
+    }
+
+    .player-btn:hover {
+      transform: scale(1.1);
+    }
+
+    .volume-container {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+    }
+
+    .volume-icon {
+      font-size: 0.8rem;
+    }
+
+    .volume-slider {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 4px;
+      border-radius: 2px;
+      background: #ffd3db;
+      outline: none;
+    }
+
+    .volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #e85d75;
+      cursor: pointer;
+    }
+
+    /* --- SIDEBAR & MENU --- */
+    .menu-btn {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      z-index: 1000;
+      background: #e85d75;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 20px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(232, 93, 117, 0.4);
+      transition: all 0.3s ease;
+    }
+
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: -280px;
+      width: 280px;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      box-shadow: 5px 0 25px rgba(0,0,0,0.15);
+      z-index: 999;
+      transition: left 0.3s ease;
+      padding: 80px 20px 20px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .sidebar.active {
+      left: 0;
+    }
+
+    .sidebar h2 {
+      font-family: 'Sacramento', cursive;
+      font-size: 2.2rem;
+      color: #e85d75;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .nav-item {
+      padding: 12px 18px;
+      background: #fff;
+      border-radius: 12px;
+      color: #555;
+      font-weight: 500;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav-item:hover, .nav-item.active {
+      background: #e85d75;
+      color: white;
+    }
+
+    .overlay {
+      position: fixed;
+      top:0; left:0; width:100%; height:100%;
+      background: rgba(0,0,0,0.3);
+      z-index: 998;
+      display: none;
+    }
+    .overlay.active { display: block; }
+
+    /* --- SEZIONI --- */
+    .tab-content {
+      display: none;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    .tab-content.active {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      position: relative;
+    }
+
+    /* --- POLAROID LATERALI (PC) --- */
+    .polaroid {
+      position: absolute;
+      background: white;
+      padding: 15px 15px 30px 15px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.18);
+      border-radius: 4px;
+      width: 250px;
+      text-align: center;
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
+      z-index: 5;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .polaroid img {
+      width: 100%;
+      height: 230px;
+      object-fit: cover;
+      border-radius: 2px;
+      pointer-events: none;
+    }
+
+    .polaroid-caption {
+      font-family: 'Sacramento', cursive;
+      font-size: 1.8rem;
+      color: #555;
+      margin-top: 10px;
+    }
+
+    .polaroid-left { 
+      left: -400px; 
+      top: 20px; 
+      transform: rotate(-8deg); 
+    }
+
+    .polaroid-right { 
+      right: -400px; 
+      top: 450px; 
+      transform: rotate(8deg); 
+    }
+
+    .polaroid-left:hover, 
+    .polaroid-left:active {
+      transform: rotate(-2deg) scale(1.05);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+      z-index: 10;
+    }
+
+    .polaroid-right:hover, 
+    .polaroid-right:active {
+      transform: rotate(2deg) scale(1.05);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+      z-index: 10;
+    }
+
+    /* --- ADATTAMENTO MOBILE --- */
+    @media (max-width: 850px) {
+      .menu-btn {
+        top: auto;
+        left: auto;
+        bottom: 20px;
+        right: 20px;
+        border-radius: 30px;
+        padding: 12px 20px;
+        font-size: 1rem;
+        box-shadow: 0 6px 16px rgba(232, 93, 117, 0.5);
+      }
+
+      .music-player {
+        top: 15px;
+        right: 15px;
+        max-width: 180px;
+        padding: 8px 12px;
+      }
+
+      body {
+        padding-top: 90px;
+        padding-bottom: 80px;
+      }
+
+      .polaroid { padding: 12px 12px 24px 12px; }
+      
+      .polaroid-left, .polaroid-right {
+        position: relative; 
+        left: auto; 
+        right: auto; 
+        top: auto;
+        margin: 15px auto; 
+        width: 100%; 
+        max-width: 230px;
+      }
+
+      .polaroid img { height: 190px; }
+      .polaroid-caption { font-size: 1.4rem; }
+      
+      .polaroid-left { transform: rotate(-4deg); }
+      .polaroid-right { transform: rotate(4deg); }
+
+      .polaroid-left:active {
+        transform: rotate(0deg) scale(1.06);
+      }
+      .polaroid-right:active {
+        transform: rotate(0deg) scale(1.06);
+      }
+    }
+
+    /* --- CARDS --- */
+    .card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 25px 20px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+      text-align: center;
+    }
+
+    h1 {
+      font-family: 'Sacramento', cursive;
+      font-size: 2.8rem;
+      color: #e85d75;
+      margin-bottom: 5px;
+    }
+
+    p.subtitle { font-size: 0.9rem; color: #777; }
+
+    .countdown-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #e85d75;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+
+    .timer { display: flex; justify-content: space-between; gap: 5px; }
+    .timer-section { display: flex; flex-direction: column; align-items: center; flex: 1; }
+    .timer-number { font-size: 1.5rem; font-weight: 600; color: #333; }
+    .timer-label { font-size: 0.7rem; color: #888; }
+
+    .quote-box {
+      min-height: 90px;
+      display: flex; align-items: center; justify-content: center;
+      font-style: italic; color: #4a4a4a; font-size: 0.95rem;
+      margin: 15px 0; padding: 10px;
+      border-left: 3px solid #e85d75;
+      background: rgba(255,255,255,0.5);
+      border-radius: 0 10px 10px 0;
+    }
+
+    .btn {
+      background-color: #e85d75; color: white; border: none;
+      padding: 12px 24px; border-radius: 25px;
+      font-size: 0.9rem; font-weight: 600; cursor: pointer;
+      box-shadow: 0 4px 12px rgba(232, 93, 117, 0.3);
+    }
+
+    /* --- SEZIONE PIANI & CHECKLIST --- */
+    .plans-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 5px;
+      margin-top: 15px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .plans-grid { 
+      display: flex; 
+      flex-direction: column; 
+      gap: 10px; 
+      margin-top: 8px; 
+      text-align: left; 
+    }
+
+    .plan-item { 
+      background: white; 
+      padding: 12px 15px; 
+      border-radius: 12px; 
+      font-size: 0.9rem; 
+      color: #333; 
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+      transition: all 0.2s ease;
+    }
+
+    .plan-item.done {
+      background: #f0f0f0;
+      opacity: 0.75;
+    }
+
+    .plan-item.done .plan-text {
+      text-decoration: line-through;
+      color: #888;
+    }
+
+    .plan-text {
+      flex: 1;
+      padding-right: 10px;
+    }
+
+    .plan-checkbox {
+      width: 20px;
+      height: 20px;
+      accent-color: #e85d75;
+      cursor: pointer;
+    }
+
+    /* --- GALLERIA RICORDI --- */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .gallery-item {
+      background: white;
+      border-radius: 12px;
+      padding: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .gallery-item-img-wrap {
+      position: relative;
+      cursor: pointer;
+      overflow: hidden;
+      border-radius: 8px;
+    }
+
+    .gallery-item img {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.3s ease;
+    }
+
+    .gallery-item-img-wrap:hover img {
+      transform: scale(1.05);
+    }
+
+    .gallery-item p {
+      font-size: 0.8rem;
+      margin-top: 8px;
+      font-weight: 500;
+    }
+
+    .gallery-actions {
+      display: flex;
+      gap: 5px;
+      margin-top: 8px;
+    }
+
+    .zoom-btn {
+      flex: 1;
+      background: #4a90e2;
+      color: white;
+      border: none;
+      padding: 6px 0;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+
+    .delete-gallery-btn {
+      flex: 1;
+      background: #e74c3c;
+      color: white;
+      border: none;
+      padding: 6px 0;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+
+    .gallery-future {
+      border: 2px dashed #e85d75;
+      background: rgba(232, 93, 117, 0.05);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #e85d75;
+      padding: 15px;
+      min-height: 160px;
+    }
+
+    /* --- LIGHTBOX MODAL --- */
+    .image-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.88);
+      backdrop-filter: blur(8px);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      padding: 20px;
+    }
+
+    .image-modal.active {
+      display: flex;
+    }
+
+    .image-modal-content {
+      max-width: 95%;
+      max-height: 80vh;
+      object-fit: contain;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .image-modal-title {
+      color: white;
+      margin-top: 15px;
+      font-size: 1rem;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    .image-modal-close {
+      position: absolute;
+      top: 20px;
+      right: 25px;
+      color: white;
+      font-size: 2.2rem;
+      font-weight: bold;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.2);
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      transition: background 0.2s ease;
+    }
+
+    .image-modal-close:hover {
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    /* --- MAPPA --- */
+    #map {
+      width: 100%;
+      height: 350px;
+      border-radius: 15px;
+      margin-top: 15px;
+      cursor: crosshair;
+    }
+
+    /* --- GAME CANVAS --- */
+    #gameCanvas {
+      background: #222;
+      border-radius: 15px;
+      width: 100%;
+      max-width: 400px;
+      height: 300px;
+      margin: 10px auto 0 auto;
+      display: block;
+      touch-action: none;
+    }
+
+    /* --- VICTORY BOX --- */
+    .win-box {
+      display: none;
+      background: #fff;
+      border: 2px solid #2ecc71;
+      border-radius: 15px;
+      padding: 15px;
+      margin-top: 15px;
+      animation: popIn 0.4s ease;
+    }
+
+    .win-box h3 {
+      color: #2ecc71;
+      margin-bottom: 5px;
+    }
+
+    .code-display {
+      font-family: monospace;
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: #e85d75;
+      background: #fff0f3;
+      padding: 8px 15px;
+      border-radius: 8px;
+      border: 1px dashed #e85d75;
+      display: inline-block;
+      margin-top: 8px;
+      letter-spacing: 2px;
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0.8); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    footer { margin-top: 10px; font-size: 0.8rem; color: #888; text-align: center; }
+  </style>
+</head>
+<body>
+
+  <!-- MODALE PER L'INGRANDIMENTO IMMAGINI -->
+  <div class="image-modal" id="imageModal" onclick="closeImageModal()">
+    <button class="image-modal-close" onclick="closeImageModal()">&times;</button>
+    <img src="" id="modalImg" class="image-modal-content" onclick="event.stopPropagation()">
+    <div id="modalTitle" class="image-modal-title"></div>
+  </div>
+
+  <!-- PLAYER MANAGER MUSICA IN ALTO A DESTRA -->
+  <div class="music-player">
+    <div class="track-title" id="trackTitle">Nessuna Canzone</div>
+    <div class="player-controls">
+      <button class="player-btn" onclick="prevTrack()" title="Precedente">⏮️</button>
+      <button class="player-btn" id="playPauseBtn" onclick="togglePlayPause()" title="Play/Pausa">▶️</button>
+      <button class="player-btn" onclick="nextTrack()" title="Successiva">⏭️</button>
+    </div>
+    <div class="volume-container">
+      <span class="volume-icon">🔈</span>
+      <input type="range" class="volume-slider" id="volumeSlider" min="0" max="1" step="0.01" value="0.8" oninput="changeVolume(this.value)">
+      <span class="volume-icon">🔊</span>
+    </div>
+  </div>
+
+  <audio id="bgMusic" style="display: none;"></audio>
+
+  <!-- BOTTONE SIDEBAR MENÙ -->
+  <button class="menu-btn" onclick="toggleMenu()">☰ Menù</button>
+
+  <!-- SIDEBAR LATERALE -->
+  <div class="sidebar" id="sidebar">
+    <h2>Menù ✨</h2>
+    <div class="nav-item active" onclick="switchTab('home')">🏠 Home</div>
+    <div class="nav-item" onclick="switchTab('gallery')">📸 I Nostri Ricordi</div>
+    <div class="nav-item" onclick="switchTab('mapTab')">🗺️ La Nostra Mappa</div>
+    <div class="nav-item" onclick="switchTab('arcade')">🎮 Arcade Room</div>
+  </div>
+  <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+
+  <!-- TAB 1: HOME -->
+  <div id="home" class="tab-content active">
+    <div class="container">
+      <div class="card">
+        <h1>Buon Compleanno! ❤️</h1>
+        <p class="subtitle">Spero ti piaccia il sito😖</p>
+      </div>
+
+      <div class="card">
+        <div class="countdown-title">Ci conosciamo da:</div>
+        <div class="timer">
+          <div class="timer-section"><span class="timer-number" id="days">00</span><span class="timer-label">Giorni</span></div>
+          <div class="timer-section"><span class="timer-number" id="hours">00</span><span class="timer-label">Ore</span></div>
+          <div class="timer-section"><span class="timer-number" id="minutes">00</span><span class="timer-label">Minuti</span></div>
+          <div class="timer-section"><span class="timer-number" id="seconds">00</span><span class="timer-label">Secondi</span></div>
+        </div>
+      </div>
+
+      <div class="polaroid polaroid-left" onclick="openImageModal('foto1.jpg', 'So fucking cute ❤️')">
+        <img src="foto1.jpg" alt="Foto Sinistra">
+        <div class="polaroid-caption">So fucking cute ❤️</div>
+      </div>
+
+      <div class="card">
+        <div class="countdown-title">Un pensiero per te</div>
+        <div class="quote-box" id="quoteDisplay">Clicca il pulsante sotto per generare una frase carina</div>
+        <button class="btn" onclick="generateQuote()">Clicca per generare ✨</button>
+      </div>
+
+      <div class="polaroid polaroid-right" onclick="openImageModal('foto2.jpg', 'Mia piccolina ✨')">
+        <img src="foto2.jpg" alt="Foto Destra">
+        <div class="polaroid-caption">Mia piccolina ✨</div>
+      </div>
+
+      <div class="card">
+        <div class="countdown-title">Per quando ci vedremo...</div>
+        <p class="subtitle">I nostri piani e le cose che faremo insieme!</p>
+        
+        <div class="plans-header">
+          <span>Attività</span>
+          <span>Fatto? ❤️</span>
+        </div>
+
+        <div class="plans-grid" id="plansGrid">
+          <!-- I piani appariranno qui dinamicamente da Firebase -->
+        </div>
+
+        <div style="margin-top: 20px; display: flex; gap: 8px;">
+          <input type="text" id="customInput" placeholder="Aggiungi un'idea..." style="flex: 1; padding: 10px 15px; border-radius: 20px; border: 1px solid #ddd; outline: none; font-size: 0.85rem;">
+          <button class="btn" onclick="addCustomPlan()" style="padding: 10px 18px; font-size: 0.85rem;">Aggiungi ➕</button>
+        </div>
+      </div>
+      <footer>Fatto con il cuore per il tuo compleanno.</footer>
+    </div>
+  </div>
+
+  <!-- TAB 2: GALLERIA RICORDI -->
+  <div id="gallery" class="tab-content">
+    <div class="card">
+      <h1>I Nostri Momenti 📸</h1>
+      <p class="subtitle">Piccole cose memorabili che abbiamo condiviso finora!</p>
+
+      <div style="background: rgba(255, 255, 255, 0.9); border-radius: 15px; padding: 15px; margin-top: 15px; text-align: left; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+        <div style="font-size: 0.9rem; font-weight: 600; color: #e85d75; margin-bottom: 8px;">➕ Carica una foto dal tuo dispositivo:</div>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <input type="text" id="memoryTitle" placeholder="Titolo del ricordo (es. La nostra prima foto)" style="padding: 8px 12px; border-radius: 10px; border: 1px solid #ddd; outline: none; font-size: 0.85rem;">
+          
+          <input type="file" id="memoryFileInput" accept="image/*" style="font-size: 0.8rem; color: #555;">
+          
+          <button class="btn" id="uploadBtn" onclick="uploadMemory()" style="padding: 10px 15px; font-size: 0.85rem;">Aggiungi Ricordo 📤</button>
+          <p id="uploadStatus" style="font-size: 0.75rem; color: #e85d75; display: none; font-weight: 600;"></p>
+        </div>
+      </div>
+
+      <div class="gallery-grid" id="galleryContainer">
+        <!-- I ricordi salvati appariranno qui -->
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: MAPPA INTERATTIVA -->
+  <div id="mapTab" class="tab-content">
+    <div class="card">
+      <h1>I Nostri Luoghi 🗺️</h1>
+      <p class="subtitle">I posti importanti per noi e i nostri prossimi viaggi!</p>
+      
+      <div style="background: rgba(255, 255, 255, 0.9); border-radius: 15px; padding: 15px; margin-top: 15px; text-align: left; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+        <div style="font-size: 0.9rem; font-weight: 600; color: #e85d75; margin-bottom: 8px;">📍 Aggiungi un posto:</div>
+        
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: flex; gap: 6px;">
+            <input type="text" id="citySearchInput" placeholder="🔍 Cerca una città (es. Parigi, Roma...)" style="flex: 1; padding: 8px 12px; border-radius: 10px; border: 1px solid #ddd; outline: none; font-size: 0.85rem;">
+            <button class="btn" onclick="searchCity()" style="padding: 8px 14px; font-size: 0.8rem; white-space: nowrap;">Cerca 🔍</button>
+          </div>
+
+          <hr style="border: 0; border-top: 1px dashed #eee; margin: 2px 0;">
+
+          <input type="text" id="mapPlaceName" placeholder="Nome del luogo (es. Parigi / La nostra panchina)" style="padding: 8px 12px; border-radius: 10px; border: 1px solid #ddd; outline: none; font-size: 0.85rem;">
+          <input type="text" id="mapPlaceDesc" placeholder="Descrizione o nota speciale (opzionale)..." style="padding: 8px 12px; border-radius: 10px; border: 1px solid #ddd; outline: none; font-size: 0.85rem;">
+          
+          <p style="font-size: 0.75rem; color: #777;">
+            💡 <strong>Come fare:</strong><br>
+            • Per le città: Scrivi la città sopra e premi <strong>Cerca</strong>.<br>
+            • Per punti personalizzati: Scrivi il Nome e <strong>clicca sulla mappa</strong> nel punto esatto!
+          </p>
+        </div>
+      </div>
+
+      <div id="map"></div>
+    </div>
+  </div>
+
+  <!-- TAB 4: ARCADE ROOM -->
+  <div id="arcade" class="tab-content">
+    <div class="card">
+      <h1>Schiva le dipendenze 🎮</h1>
+      <p class="subtitle">Non farti prendere dalle dipendenze e schivale!</p>
+      
+      <div style="background: rgba(255, 255, 255, 0.9); border: 2px dashed #e85d75; border-radius: 15px; padding: 12px 15px; margin: 15px 0 10px 0; font-size: 0.85rem; text-align: left; line-height: 1.5; color: #4a4a4a;">
+        <div style="font-weight: 600; color: #e85d75; margin-bottom: 5px; text-align: center; font-size: 0.95rem;">
+          📖 Come si gioca & Sfida Segreta:
+        </div>
+        <p style="margin-bottom: 6px;">
+          Muovi il tuo personaggio trascinandolo con il dito (o con il mouse) per catturare le cose buone e schivare le cose cattive!
+        </p>
+        <div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px;">
+          <div><strong style="color: #2ecc71;">✅ Prendi (+10 punti):</strong> Sushi 🍣, Red Bull 🥤, Minecraft ⛏️, Snowboard 🏂, Tomi🧍‍♂️</div>
+          <div><strong style="color: #e74c3c;">🚫 Schiva (Game Over):</strong> Sigarette 🚬, Alcolici 🍸, Droga 🌿</div>
+        </div>
+        <div style="background: #fff0f3; padding: 8px 12px; border-radius: 10px; border: 1px solid #ffccd5; text-align: center; font-weight: 600; color: #e85d75;">
+          🎁 <strong>OBIETTIVO SPECIALE:</strong> Raggiungi <u>200 PUNTI</u> per sbloccare un codice segreto! Riferiscimelo appena lo sblocchi per ricevere una sorpresa! 🔥
+        </div>
+      </div>
+
+      <div style="font-size: 1.1rem; font-weight: 600; color: #e85d75; margin-top: 5px;">Punteggio: <span id="score">0</span> / 200</div>
+      
+      <canvas id="gameCanvas" width="300" height="300"></canvas>
+      
+      <!-- BOX VITTORIA / CODICE SEGRETO -->
+      <div id="winBox" class="win-box">
+        <h3>🎉 COMPLIMENTI! HAI VINTO! 🎉</h3>
+        <p style="font-size: 0.85rem; color: #555;">Hai raggiunto 200 punti e superato la sfida!</p>
+        <p style="font-size: 0.85rem; color: #555; margin-top: 5px;">Ecco il tuo codice segreto da riferirmi:</p>
+        <div class="code-display" id="secretCodeDisplay">KINGCHECCOREGNA</div>
+      </div>
+
+      <button class="btn" style="margin-top: 15px;" onclick="startGame()">Avvia / Ricomincia 🔄</button>
+    </div>
+  </div>
+
+  <!-- LEAFLET MAP JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- FIREBASE SCRIPTS -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+  <script>
+    // 0. FUNZIONE MODALE INGRANDIMENTO IMMAGINI
+    function openImageModal(imgSrc, titleText) {
+      const modal = document.getElementById("imageModal");
+      const modalImg = document.getElementById("modalImg");
+      const modalTitle = document.getElementById("modalTitle");
+
+      modalImg.src = imgSrc;
+      modalTitle.innerText = titleText || "";
+      modal.classList.add("active");
+    }
+
+    function closeImageModal() {
+      document.getElementById("imageModal").classList.remove("active");
+    }
+
+    document.addEventListener("keydown", function(e) {
+      if (e.key === "Escape") {
+        closeImageModal();
+      }
+    });
+
+    // 0. GESTIONE MUSICA DI FONDO
+    const playlist = [
+      "canzone1.mp3", "canzone2.mp3", "canzone3.mp3", "canzone4.mp3", "canzone5.mp3",
+      "canzone6.mp3", "canzone7.mp3", "canzone8.mp3", "canzone9.mp3", "canzone10.mp3"
+    ];
+
+    let currentTrackIndex = 0;
+    const audioElement = document.getElementById("bgMusic");
+    const trackTitleElement = document.getElementById("trackTitle");
+    const playPauseBtn = document.getElementById("playPauseBtn");
+    const volumeSlider = document.getElementById("volumeSlider");
+    let hasStarted = false;
+
+    audioElement.volume = volumeSlider.value;
+
+    function loadTrack(index) {
+      currentTrackIndex = index;
+      audioElement.src = playlist[currentTrackIndex];
+      const displayName = playlist[currentTrackIndex].replace(".mp3", "");
+      trackTitleElement.innerText = "🎵 " + displayName;
+    }
+
+    function playTrack() {
+      audioElement.play().then(() => {
+        playPauseBtn.innerText = "⏸️";
+      }).catch(err => {
+        console.log("In attesa di interazione...");
+      });
+    }
+
+    function togglePlayPause() {
+      if (!hasStarted) {
+        hasStarted = true;
+        loadTrack(Math.floor(Math.random() * playlist.length));
+        playTrack();
+        return;
+      }
+
+      if (audioElement.paused) {
+        audioElement.play();
+        playPauseBtn.innerText = "⏸️";
+      } else {
+        audioElement.pause();
+        playPauseBtn.innerText = "▶️";
+      }
+    }
+
+    function nextTrack() {
+      currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+      loadTrack(currentTrackIndex);
+      playTrack();
+    }
+
+    function prevTrack() {
+      currentTrackIndex = (currentTrackIndex - 1 + playlist.length) % playlist.length;
+      loadTrack(currentTrackIndex);
+      playTrack();
+    }
+
+    function changeVolume(value) {
+      audioElement.volume = value;
+    }
+
+    audioElement.onended = function() { nextTrack(); };
+
+    document.addEventListener('click', function startAudioOnFirstClick(e) {
+      if (e.target.closest('.music-player')) return;
+
+      if (!hasStarted) {
+        hasStarted = true;
+        loadTrack(Math.floor(Math.random() * playlist.length));
+        playTrack();
+        document.removeEventListener('click', startAudioOnFirstClick);
+      }
+    });
+
+    // 1. SIDEBAR & NAVIGATION
+    function toggleMenu() {
+      document.getElementById("sidebar").classList.toggle("active");
+      document.getElementById("overlay").classList.toggle("active");
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+      
+      document.getElementById(tabId).classList.add('active');
+      toggleMenu();
+
+      if(tabId === 'mapTab' && !mapInitialized) {
+        initMap();
+      }
+    }
+
+    // 2. FIREBASE CONFIG
+    const firebaseConfig = {
+      apiKey: "AIzaSyDjnjz43Qn2vm7cZhVzVHmoPXMIsYWleRM",
+      authDomain: "auguri-compleanno-7ccbc.firebaseapp.com",
+      databaseURL: "https://auguri-compleanno-7ccbc-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "auguri-compleanno-7ccbc",
+      storageBucket: "auguri-compleanno-7ccbc.firebasestorage.app",
+      messagingSenderId: "234250368730",
+      appId: "1:234250368730:web:0a9843eff6d38a811597e3",
+      measurementId: "G-MXHH5MQDLG"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    // COUNTDOWN & QUOTES
+    const startDate = new Date(2026, 5, 14, 20, 27, 0).getTime(); 
+
+    function updateCounter() {
+      const now = new Date().getTime();
+      const difference = now - startDate;
+      if (difference > 0) {
+        const d = Math.floor(difference / (1000 * 60 * 60 * 24));
+        const h = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const m = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+        const s = Math.floor((difference % (1000 * 60)) / 1000);
+
+        document.getElementById("days").innerText = d < 10 ? '0' + d : d;
+        document.getElementById("hours").innerText = h < 10 ? '0' + h : h;
+        document.getElementById("minutes").innerText = m < 10 ? '0' + m : m;
+        document.getElementById("seconds").innerText = s < 10 ? '0' + s : s;
+      }
+    }
+    setInterval(updateCounter, 1000);
+    updateCounter();
+
+    const quotes = [
+      "In questo mese e mezzo mi hai fatto sorridere più di quanto potessi immaginare",
+      "Non vedo l'ora di poterti finalmente abbracciar dal vivo",
+      "Farei altre 10000000 chiamate con te e starti ad ascoltare per ore",
+      "Seppure la distancia ci separi, il mio primo pensiero la mattina sei sempre tu",
+      "Il primo abbraccio che ti darò farà dimenticare tutti i chilometri che ci separano",
+      "Non riderò mai di te ma solamente con te piccola",
+      "Voglio che tu sia la mia principessa",
+      "Quando sentirai il calore delle mie labbra tutte le tue preoccupazioni spariranno",
+      "Ti porterò in Svizzera, quante volte vorrai",
+      "Puoi dimenticarti della dipendenza da sigarettes, ora ci sono io",
+      "Sei stata una sopresa, non mi aspettavo di trovare una ragazza cosi speciale",
+      "Spero di giocare a minecraft ancora insieme, mi diverto con la mia piccola",
+      "Un giorno con te e Sky, ci sarò anche io piccola",
+      "Come Checco è il king, anche io sono il tuo king, e tu la mia principessa",
+      "Se tu sei Mitsuri, io sarò Obanai",
+      "Vorrei vedere con te le stelle, insieme, abbracciati, mentre ascoltiamo musica",
+      "Se tu sei Lucy, io sarò David",
+      "Quando guardo la luna, penso a te, e come stiamo guardando la stessa cosa anche se distanti",
+      "Se tu sei Mikasa, io sono Eren",
+      "Fammi mangiare pafuleti",
+      "Vorrei riempirti di baci, su tutto il corpo",
+      "Te mangio come te mangi il sushi",
+      "Nell'anime opening quiz puoi sbagliare quante volte vuoi dorororo, mi piaci lo stesso",
+      "Quando verrai da me ci penserò io a cucinare per te",
+      "Sei la mia ragazza ideale e non ti cambierei per nessuno al mondo",
+      "Ti porterò a fare snowboard con me, e ti terrei d'occhio per evitare che animali ti attackino",
+      "Dame un gr",
+      "Mi occupo io di te okay?",
+      "Per me sei come il mare per un pesce",
+      "Per me sei come essere un architetto per Clark",
+      "Immagina un giorno, io te Mr. Green e un lettino caldo",
+      "Se tu sei Touka, io sarò Kaneki",
+      "Vorrei guardare tanti anime with te, all' infinito",
+      "Non existe essere così bella, non existe",
+      "Devi parare gli insulti degli altri come pari le palle in Palla della morte"
+    ];
+
+    function generateQuote() {
+      const quoteDisplay = document.getElementById("quoteDisplay");
+      quoteDisplay.style.opacity = 0;
+      setTimeout(() => {
+        const randomIndex = Math.floor(Math.random() * quotes.length);
+        quoteDisplay.innerText = `"${quotes[randomIndex]}"`;
+        quoteDisplay.style.opacity = 1;
+      }, 200);
+    }
+
+    // --- SEZIONI PIANI INIZIALI PREDEFINITI ---
+    const defaultPlans = [
+      { id: 'plan1', text: '⭐ Guardare le stelline abbracciati, ascoltare musica e fare discorsi' },
+      { id: 'plan2', text: '🌊 Andare a mare insieme e guardare il tramonto' },
+      { id: 'plan3', text: '🍕 Pisolino + Aria Condizionata e cena d\'asporto' },
+      { id: 'plan4', text: '🛋️ Abbraccio gigante che dura 10 minuti' },
+      { id: 'plan5', text: '📺 Serata Coccole + anime' }
+    ];
+
+    database.ref('plansState').on('value', (snapshot) => {
+      const plansData = snapshot.val() || {};
+      renderPlans(plansData);
+    });
+
+    function renderPlans(plansData) {
+      const grid = document.getElementById("plansGrid");
+      grid.innerHTML = "";
+
+      defaultPlans.forEach(plan => {
+        const isDone = plansData[plan.id] ? plansData[plan.id].done : false;
+        const item = createPlanDomElement(plan.id, plan.text, isDone);
+        grid.appendChild(item);
+      });
+
+      Object.keys(plansData).forEach(key => {
+        if (!key.startsWith('plan')) {
+          const plan = plansData[key];
+          const item = createPlanDomElement(key, `✨ ${plan.text}`, plan.done);
+          grid.appendChild(item);
+        }
+      });
+    }
+
+    function createPlanDomElement(id, text, isDone) {
+      const item = document.createElement("div");
+      item.className = `plan-item ${isDone ? 'done' : ''}`;
+
+      item.innerHTML = `
+        <span class="plan-text">${text}</span>
+        <input type="checkbox" class="plan-checkbox" ${isDone ? 'checked' : ''} onchange="togglePlanStatus('${id}', this.checked, '${text.replace(/'/g, "\\'")}')">
+      `;
+      return item;
+    }
+
+    function togglePlanStatus(id, isChecked, text) {
+      database.ref(`plansState/${id}`).set({
+        text: text,
+        done: isChecked
+      });
+    }
+
+    function addCustomPlan() {
+      const input = document.getElementById("customInput");
+      const text = input.value.trim();
+      if (text !== "") {
+        const newRef = database.ref('plansState').push();
+        newRef.set({
+          text: text,
+          done: false
+        });
+        input.value = ""; 
+      }
+    }
+
+    // 3. GALLERIA RICORDI
+    database.ref('customGallery').on('value', (snapshot) => {
+      const galleryData = snapshot.val();
+      const container = document.getElementById("galleryContainer");
+      container.innerHTML = "";
+
+      if (galleryData) {
+        Object.keys(galleryData).forEach(key => {
+          const item = galleryData[key];
+          const itemDiv = document.createElement("div");
+          itemDiv.className = "gallery-item";
+          
+          const safeTitle = (item.title || "").replace(/'/g, "\\'");
+
+          itemDiv.innerHTML = `
+            <div>
+              <div class="gallery-item-img-wrap" onclick="openImageModal('${item.img}', '${safeTitle}')" title="Clicca per ingrandire">
+                <img src="${item.img}" alt="${item.title}">
+              </div>
+              <p>${item.title}</p>
+            </div>
+            <div class="gallery-actions">
+              <button class="zoom-btn" onclick="openImageModal('${item.img}', '${safeTitle}')">🔍 Ingrandisci</button>
+              <button class="delete-gallery-btn" onclick="removeMemory('${key}')">Elimina 🗑️</button>
+            </div>
+          `;
+          container.appendChild(itemDiv);
+        });
+      }
+
+      const futureDiv = document.createElement("div");
+      futureDiv.className = "gallery-item gallery-future";
+      futureDiv.innerHTML = `
+        <span style="font-size: 2rem;">✨</span>
+        <p><strong>In arrivo...</strong><br>Le nostre prime foto dal vivo insieme!</p>
+      `;
+      container.appendChild(futureDiv);
+    });
+
+    function uploadMemory() {
+      const titleInput = document.getElementById("memoryTitle");
+      const fileInput = document.getElementById("memoryFileInput");
+      const statusText = document.getElementById("uploadStatus");
+      const uploadBtn = document.getElementById("uploadBtn");
+
+      const title = titleInput.value.trim();
+      const file = fileInput.files[0];
+
+      if (!title || !file) {
+        alert("Inserisci sia il titolo che la foto!");
+        return;
+      }
+
+      statusText.style.display = "block";
+      statusText.innerText = "Ottimizzazione foto in corso... ⏳";
+      uploadBtn.disabled = true;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.src = e.target.result;
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          const maxDimension = 1200;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > maxDimension) {
+              height *= maxDimension / width;
+              width = maxDimension;
+            }
+          } else {
+            if (height > maxDimension) {
+              width *= maxDimension / height;
+              height = maxDimension;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          const base64Image = canvas.toDataURL('image/jpeg', 0.8);
+
+          database.ref('customGallery').push({
+            title: title,
+            img: base64Image
+          }).then(() => {
+            statusText.innerText = "Ricordo aggiunto! ✨";
+            setTimeout(() => { statusText.style.display = "none"; }, 3000);
+            titleInput.value = "";
+            fileInput.value = "";
+            uploadBtn.disabled = false;
+          }).catch(() => {
+            alert("Errore nel salvataggio.");
+            statusText.style.display = "none";
+            uploadBtn.disabled = false;
+          });
+        };
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removeMemory(key) {
+      if (confirm("Vuoi davvero eliminare questo ricordo?")) {
+        database.ref('customGallery/' + key).remove();
+      }
+    }
+
+    // 4. MAPPA INTERATTIVA
+    let mapInitialized = false;
+    let map;
+    let markersGroup;
+    let polylineGroup;
+
+    const homeTomi = [45.8153, 9.2272];
+    const homeDeni = [41.8902, 12.4922];
+
+    function initMap() {
+      mapInitialized = true;
+
+      map = L.map('map').setView([43.8, 10.5], 6);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+      }).addTo(map);
+
+      markersGroup = L.layerGroup().addTo(map);
+      polylineGroup = L.layerGroup().addTo(map);
+
+      map.on('click', onMapClick);
+
+      database.ref('customMapLocations').on('value', (snapshot) => {
+        renderMapItems(snapshot.val());
+      });
+    }
+
+    function renderMapItems(firebaseLocations) {
+      if (!map) return;
+
+      markersGroup.clearLayers();
+      polylineGroup.clearLayers();
+
+      L.polyline([homeTomi, homeDeni], { color: '#e85d75', weight: 3, dashArray: '6, 8' }).addTo(polylineGroup);
+
+      L.marker(homeTomi)
+       .bindPopup('<b>Casa Tomi 🏠</b><br>Erba (CO)')
+       .addTo(markersGroup);
+
+      L.marker(homeDeni)
+       .bindPopup('<b>Casa Deni ❤️</b><br>Vicino al Colosseo, Roma')
+       .addTo(markersGroup);
+
+      if (firebaseLocations) {
+        Object.keys(firebaseLocations).forEach(key => {
+          const loc = firebaseLocations[key];
+
+          const popupContent = `
+            <div style="text-align: center;">
+              <b>✨ ${loc.name}</b><br>${loc.desc}<br>
+              <button onclick="removeLocation('${key}')" style="margin-top: 8px; background: #e74c3c; color: white; border: none; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 0.75rem;">Elimina 🗑️</button>
+            </div>
+          `;
+
+          L.marker([loc.lat, loc.lng])
+           .bindPopup(popupContent)
+           .addTo(markersGroup);
+        });
+      }
+    }
+
+    function searchCity() {
+      const cityInput = document.getElementById("citySearchInput");
+      const nameInput = document.getElementById("mapPlaceName");
+      const descInput = document.getElementById("mapPlaceDesc");
+
+      const query = cityInput.value.trim();
+
+      if (!query) {
+        alert("Inserisci il nome di una città da cercare!");
+        return;
+      }
+
+      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data && data.length > 0) {
+            const firstResult = data[0];
+            const lat = parseFloat(firstResult.lat);
+            const lng = parseFloat(firstResult.lon);
+
+            const placeName = nameInput.value.trim() || query;
+            const placeDesc = descInput.value.trim() || "Città speciale ❤️";
+
+            database.ref('customMapLocations').push({
+              name: placeName,
+              desc: placeDesc,
+              lat: lat,
+              lng: lng
+            });
+
+            map.setView([lat, lng], 10);
+            alert(`Aggiunta "${placeName}" sulla mappa! ✨`);
+
+            cityInput.value = "";
+            nameInput.value = "";
+            descInput.value = "";
+          } else {
+            alert("Nessun luogo trovato con questo nome. Prova a essere più specifico o clicca manualmente sulla mappa!");
+          }
+        })
+        .catch(err => {
+          alert("Errore durante la ricerca della città.");
+        });
+    }
+
+    function onMapClick(e) {
+      const nameInput = document.getElementById("mapPlaceName");
+      const descInput = document.getElementById("mapPlaceDesc");
+
+      const name = nameInput.value.trim();
+      const desc = descInput.value.trim();
+
+      if (!name) {
+        alert("Inserisci prima il 'Nome del luogo' nel campo di testo!");
+        nameInput.focus();
+        return;
+      }
+
+      database.ref('customMapLocations').push({
+        name: name,
+        desc: desc || "Luogo speciale ❤️",
+        lat: e.latlng.lat,
+        lng: e.latlng.lng
+      });
+
+      alert(`Aggiunto "${name}" sulla mappa! ✨`);
+
+      nameInput.value = "";
+      descInput.value = "";
+    }
+
+    function removeLocation(key) {
+      if (confirm("Vuoi davvero rimuovere questo posto dalla mappa?")) {
+        database.ref('customMapLocations/' + key).remove();
+      }
+    }
+
+    // 5. GAME ARCADE
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const playerImg = new Image();
+    playerImg.src = "ragazza.png";
+
+    const goodSources = ["sushi.png", "minecraft.png", "snowboard.png", "redbull.png","tomi.png"];
+    const goodImages = goodSources.map(src => {
+      const img = new Image();
+      img.src = src;
+      return img;
+    });
+
+    const badSources = ["sigaretta.png", "alcol.png","droga.png"];
+    const badImages = badSources.map(src => {
+      const img = new Image();
+      img.src = src;
+      return img;
+    });
+
+    let score = 0;
+    let gameLoop;
+    let playerMaxBaseSize = 60; 
+    let player = { x: 120, y: 230, width: 60, height: 60 };
+    let items = [];
+    let isPlaying = false;
+    
+    // CODICE DI VITTORIA MODIFICABILE A PIACERE
+    const SECRET_CODE = "KINGCHECCOREGNA";
+
+    function getProportionalSize(img, maxSize) {
+      if (!img.complete || img.naturalWidth === 0) {
+        return { width: maxSize, height: maxSize };
+      }
+      const aspectRatio = img.naturalWidth / img.naturalHeight;
+      if (aspectRatio > 1) {
+        return { width: maxSize, height: maxSize / aspectRatio };
+      } else {
+        return { width: maxSize * aspectRatio, height: maxSize };
+      }
+    }
+
+    canvas.addEventListener("mousemove", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      player.x = e.clientX - rect.left - player.width / 2;
+    });
+
+    canvas.addEventListener("touchmove", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      player.x = e.touches[0].clientX - rect.left - player.width / 2;
+    });
+
+    function startGame() {
+      score = 0;
+      items = [];
+      document.getElementById("winBox").style.display = "none";
+      
+      const pSize = getProportionalSize(playerImg, playerMaxBaseSize);
+      player.width = pSize.width;
+      player.height = pSize.height;
+      player.y = canvas.height - player.height - 10;
+      player.x = canvas.width / 2 - player.width / 2;
+
+      isPlaying = true;
+      document.getElementById("score").innerText = score;
+      clearInterval(gameLoop);
+      gameLoop = setInterval(updateGame, 20);
+    }
+
+    function triggerWin() {
+      isPlaying = false;
+      clearInterval(gameLoop);
+      
+      // Mostra il box con il codice segreto
+      const winBox = document.getElementById("winBox");
+      document.getElementById("secretCodeDisplay").innerText = SECRET_CODE;
+      winBox.style.display = "block";
+      
+      alert("🎉 COMPLIMENTI! Hai raggiunto 200 PUNTI! 🏆\n\nEcco il tuo codice segreto: " + SECRET_CODE + "\n\nRiferiscilo subito a Tomi per sbloccare la tua sorpresa speciale!");
+    }
+
+    function updateGame() {
+      if (!isPlaying) return;
+
+      if (Math.random() < 0.06) {
+        const isGood = Math.random() < 0.35; 
+        
+        const imgList = isGood ? goodImages : badImages;
+        const randomImg = imgList[Math.floor(Math.random() * imgList.length)];
+
+        items.push({
+          x: Math.random() * (canvas.width - 40),
+          y: -40,
+          maxSize: 40,
+          speed: isGood ? (2 + Math.random() * 2) : (2.5 + Math.random() * 2.5),
+          img: randomImg,
+          type: isGood ? "good" : "bad"
+        });
+      }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (playerImg.complete && playerImg.naturalWidth !== 0) {
+        const pSize = getProportionalSize(playerImg, playerMaxBaseSize);
+        player.width = pSize.width;
+        player.height = pSize.height;
+        ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
+      } else {
+        ctx.fillStyle = "#e85d75";
+        ctx.fillRect(player.x, player.y, player.width, player.height);
+      }
+
+      for (let i = items.length - 1; i >= 0; i--) {
+        let item = items[i];
+        item.y += item.speed;
+
+        const itemSize = getProportionalSize(item.img, item.maxSize);
+
+        if (item.img.complete && item.img.naturalWidth !== 0) {
+          ctx.drawImage(item.img, item.x, item.y, itemSize.width, itemSize.height);
+        } else {
+          ctx.fillStyle = item.type === "good" ? "#2ecc71" : "#e74c3c";
+          ctx.beginPath();
+          ctx.arc(item.x + itemSize.width / 2, item.y + itemSize.height / 2, itemSize.width / 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        const playerPaddingX = player.width * 0.25; 
+        const playerPaddingY = player.height * 0.20;
+
+        const playerHitbox = {
+          x: player.x + playerPaddingX,
+          y: player.y + playerPaddingY,
+          width: player.width - (playerPaddingX * 2),
+          height: player.height - (playerPaddingY * 2)
+        };
+
+        const itemPaddingX = itemSize.width * 0.20;
+        const itemPaddingY = itemSize.height * 0.20;
+
+        const itemHitbox = {
+          x: item.x + itemPaddingX,
+          y: item.y + itemPaddingY,
+          width: itemSize.width - (itemPaddingX * 2),
+          height: itemSize.height - (itemPaddingY * 2)
+        };
+
+        if (
+          itemHitbox.y + itemHitbox.height >= playerHitbox.y &&
+          itemHitbox.y <= playerHitbox.y + playerHitbox.height &&
+          itemHitbox.x + itemHitbox.width >= playerHitbox.x &&
+          itemHitbox.x <= playerHitbox.x + playerHitbox.width
+        ) {
+          if (item.type === "good") {
+            score += 10;
+            document.getElementById("score").innerText = score;
+            items.splice(i, 1);
+
+            // CONTROLLO VITTORIA A 200 PUNTI
+            if (score >= 200) {
+              triggerWin();
+              break;
+            }
+          } else {
+            isPlaying = false;
+            clearInterval(gameLoop);
+            alert("Ops! Hai preso una cosa cattiva 🚫! Punteggio finale: " + score + " ✨");
+          }
+          continue;
+        }
+
+        if (item.y > canvas.height) {
+          items.splice(i, 1);
+        }
+      }
+    }
+  </script>
+
+</body>
+</html>

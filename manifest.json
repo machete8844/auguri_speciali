@@ -1,8 +1,8 @@
 {
-  "name": "Tanti Auguri ❤️",
-  "short_name": "Auguri",
-  "start_url": "./index.html",
-  "scope": "./",
+  "name": "Diario e Compiti",
+  "short_name": "Diario",
+  "start_url": "/auguri_speciali/",
+  "scope": "/auguri_speciali/",
   "display": "standalone",
   "background_color": "#ff9a9e",
   "theme_color": "#e85d75",

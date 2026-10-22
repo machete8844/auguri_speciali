@@ -2123,9 +2123,10 @@
       Notification.requestPermission().then((permission) => {
         if (permission === 'granted') {
           getFCMTokenAndSave();
-          sendTestNotification();
+          // Abbiamo tolto sendTestNotification() così evita di mostrare 
+          // una notifica locale doppia insieme a quella di Firebase!
         } else if (permission === 'denied') {
-          alert('Hai bloccato le notifiche! Puoi riabilitarle dalle impostazioni del browser sul tuo telefono.');
+          alert('Hai bloccato le notifiche! Puoi riabilitarle dalle impostazioni del browser.');
         } else {
           alert('Permesso non concesso.');
         }

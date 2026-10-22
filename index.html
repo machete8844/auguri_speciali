@@ -2134,7 +2134,7 @@
 
     function getFCMTokenAndSave() {
       if (!messaging) {
-        console.log("FCM non è supportato in questo browser.");
+        alert("FCM non è supportato da questo browser o dispositivo.");
         return;
       }
 
@@ -2145,11 +2145,16 @@
         }).then((currentToken) => {
           if (currentToken) {
             console.log('FCM Token generato con successo:', currentToken);
+            
+            // TRICK: Ti mostra il token in una schermata di testo sul telefono così lo copiasubito!
+            prompt("Ecco il tuo FCM Token! Copialo da qui:", currentToken);
+            
             saveTokenToDatabase(currentToken);
           } else {
-            console.log('Nessun token di registrazione disponibile. Richiedi i permessi prima.');
+            alert('Nessun token generato. Verifica di aver consentito le notifiche.');
           }
         }).catch((err) => {
+          alert('Errore FCM: ' + err.message);
           console.error('Errore nell\'ottenimento del token FCM:', err);
         });
       });

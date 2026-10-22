@@ -13,20 +13,16 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// Questo intercetta il messaggio in arrivo quando l'app è chiusa o in background
 messaging.onBackgroundMessage((payload) => {
-  console.log('Messaggio ricevuto in background:', payload);
-
-  // Prende titolo e corpo inviati da Firebase
   const title = payload.notification?.title || 'Notifica ❤️';
   const body = payload.notification?.body || '';
 
   const options = {
     body: body,
-    icon: 'icon-192.png', // Forza l'icona della tua PWA!
+    icon: 'icon-192.png', // Icona personalizzata della PWA
     badge: 'icon-192.png',
     vibrate: [200, 100, 200],
-    tag: 'unica-notifica' // QUESTO È IL SEGRETO: tag univoco che impedisce i doppioni!
+    tag: 'unica-notifica-id' // QUESTO IMPEDisce I DOPPIONI A LIVELLO DI SISTEMA OS
   };
 
   self.registration.showNotification(title, options);

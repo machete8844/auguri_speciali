@@ -13,14 +13,13 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// Questo intercetta la notifica e forza l'uso della tua icona personalizzata!
 messaging.onBackgroundMessage((payload) => {
-  console.log('Ricevuta notifica in background:', payload);
+  console.log('Notifica in background intercettata:', payload);
 
-  const title = payload.notification ? payload.notification.title : 'Nuovo messaggio ❤️';
+  const title = payload.notification ? payload.notification.title : 'Notifica ❤️';
   const options = {
     body: payload.notification ? payload.notification.body : '',
-    icon: 'icon-192.png', // Qui usiamo l'icona dell'app invece della "M"!
+    icon: 'icon-192.png',
     badge: 'icon-192.png',
     vibrate: [200, 100, 200]
   };

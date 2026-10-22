@@ -4,16 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tanti Auguri! ❤️</title>
-  <!-- Collegamento al Manifest per l'icona su Home -->
-<meta name="theme-color" content="#ff4b5c">
-<!-- Compatibilità iOS per aggiungere alla schermata Home -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Diario">
-<!-- PWA Manifest & Theme -->
+
+  <!-- PWA Meta & Manifest -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#e85d75">
   <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Diario">
+
   <!-- Font Google -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -987,6 +986,9 @@
       <div class="card">
         <h1>Buon Compleanno! ❤️</h1>
         <p class="subtitle">Spero ti piaccia il sito😖</p>
+        <button class="btn" style="background: #9b59b6; margin-top: 15px;" onclick="requestNotificationPermission()">
+          🔔 Attiva / Testa Notifiche
+        </button>
       </div>
 
       <div class="card">
@@ -1378,16 +1380,16 @@
       }
     }
 
-    // 2. FIREBASE CONFIG
+    // 2. FIREBASE CONFIG (PROGETTO NUOVO)
     const firebaseConfig = {
       apiKey: "AIzaSyCozTnMZIMr_MdZMAUiuIQZ0GcCVIs23fg",
-  authDomain: "prova-auguri.firebaseapp.com",
-  databaseURL: "https://prova-auguri-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "prova-auguri",
-  storageBucket: "prova-auguri.firebasestorage.app",
-  messagingSenderId: "826288183353",
-  appId: "1:826288183353:web:92696d53ebab0d2efe15e8",
-  measurementId: "G-5JEMZ8EC4Q"
+      authDomain: "prova-auguri.firebaseapp.com",
+      databaseURL: "https://prova-auguri-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "prova-auguri",
+      storageBucket: "prova-auguri.firebasestorage.app",
+      messagingSenderId: "826288183353",
+      appId: "1:826288183353:web:92696d53ebab0d2efe15e8",
+      measurementId: "G-5JEMZ8EC4Q"
     };
 
     firebase.initializeApp(firebaseConfig);
@@ -1470,14 +1472,14 @@
       "Vorrei dimenticare tutto e andare a vivere in campagna con te",
       "Adoro i tuoi occhi, il tuo sguardo è cosi espressivo",
       "Non vedo l'ora del giorno in cui mi truccherai",
-      "Non esiste che tu sia cosi bella, sei unica piccola",
+      "Non existe che tu sia cosi bella, sei unica piccola",
       "Averti incontrato è la cosa più bella in cui potevo sperare",
       "Il mal di schiena che mi ha provocato il progetto non è nulla se sono riuscito a farti felice",
       "Spero che non ci perderemo mai, lo spero davvero",
       "Devi dirmi qual è il segreto per essere belli come te, dimmelo",
       "Non penso potrei mai stancarmi del tuo sorriso genuino",
       "Sei diventata essenziale per me, spero sia lo stesso",
-      "Ogni ora di sonno persa non è realmente persa se sono con te",
+      "Ogni ora di sonno persa non è réellement persa se sono con te",
       "Sei la mia stella, illumini ogni cosa con cui entri in cointatto",
       "Spero non sia cringe tutto questo",
       "Sei la mia redbull gusto zucchero filato e bacini",
@@ -1497,7 +1499,6 @@
       "Siamo Reze e Denji, 2 topolini",
       "Ogni minuto con te è il paradiso piccola",
       "Non vedo l'ora di giocare videogiochi mentre mi stai sulle ginocchia"
-
     ];
 
     function generateQuote() {
@@ -1562,7 +1563,7 @@
       }
     }
 
-    // 2.5 LOGICA ACHIEVEMENT DI COPPIA (GESTIONE 100% DATABASE)
+    // 2.5 LOGICA ACHIEVEMENT DI COPPIA
     const initialAchievementsList = [
       { icon: '📞', title: 'Maratona Telefonica', desc: 'Prima videochiamata di oltre 5 ore insieme.', rarity: 'raro', xp: 150, unlocked: false },
       { icon: '✈️', title: 'Primo Viaggio Insieme', desc: 'Fare il primo viaggio o weekend fuori città insieme.', rarity: 'epico', xp: 300, unlocked: false },
@@ -1573,7 +1574,6 @@
 
     const rarityXP = { comune: 50, raro: 150, epico: 300, leggendario: 600 };
 
-    // Inizializza gli achievement base su Firebase se il nodo non esiste ancora
     database.ref('coupleAchievements').once('value', (snapshot) => {
       if (!snapshot.exists()) {
         initialAchievementsList.forEach(item => {
@@ -1588,47 +1588,46 @@
     });
 
     function renderAchievements(achState) {
-  const container = document.getElementById("achievementsList");
-  container.innerHTML = "";
+      const container = document.getElementById("achievementsList");
+      container.innerHTML = "";
 
-  let totalXP = 0;
+      let totalXP = 0;
 
-  Object.keys(achState).forEach(key => {
-    const ach = achState[key];
-    const isUnlocked = !!ach.unlocked;
+      Object.keys(achState).forEach(key => {
+        const ach = achState[key];
+        const isUnlocked = !!ach.unlocked;
 
-    if (isUnlocked) {
-      totalXP += (ach.xp || rarityXP[ach.rarity] || 50);
-    }
-
-    // Formatta la data di sblocco se presente
-    const dateFormatted = ach.unlockedAt ? new Date(ach.unlockedAt).toLocaleDateString('it-IT') : '';
-
-    const card = document.createElement("div");
-    card.className = `achieve-card rarity-${ach.rarity || 'comune'} ${isUnlocked ? 'unlocked' : 'locked'}`;
-    card.innerHTML = `
-      <div class="achieve-icon">${ach.icon || '🏆'}</div>
-      <div class="achieve-info">
-        <div class="achieve-header">
-          <span class="achieve-name">${ach.title || 'Achievement'}</span>
-          <span class="achieve-badge badge-${ach.rarity || 'comune'}">${ach.rarity || 'comune'}</span>
-        </div>
-        <div class="achieve-desc">${ach.desc || ''}</div>
-        <div class="achieve-xp">+${ach.xp || rarityXP[ach.rarity] || 50} XP</div>
-        ${dateFormatted ? `<div style="font-size: 0.7rem; color: #27ae60; margin-top: 4px;">📅 Sbloccato il: ${dateFormatted}</div>` : ''}
-      </div>
-      <div>
-        ${isUnlocked 
-          ? `<span style="font-size: 1.2rem;" title="Sbloccato!">✅</span>`
-          : `<button class="achieve-btn" onclick="unlockAchievement('${key}')">Sblocca 🔓</button>`
+        if (isUnlocked) {
+          totalXP += (ach.xp || rarityXP[ach.rarity] || 50);
         }
-      </div>
-    `;
-    container.appendChild(card);
-  });
 
-  updateCoupleLevel(totalXP);
-}
+        const dateFormatted = ach.unlockedAt ? new Date(ach.unlockedAt).toLocaleDateString('it-IT') : '';
+
+        const card = document.createElement("div");
+        card.className = `achieve-card rarity-${ach.rarity || 'comune'} ${isUnlocked ? 'unlocked' : 'locked'}`;
+        card.innerHTML = `
+          <div class="achieve-icon">${ach.icon || '🏆'}</div>
+          <div class="achieve-info">
+            <div class="achieve-header">
+              <span class="achieve-name">${ach.title || 'Achievement'}</span>
+              <span class="achieve-badge badge-${ach.rarity || 'comune'}">${ach.rarity || 'comune'}</span>
+            </div>
+            <div class="achieve-desc">${ach.desc || ''}</div>
+            <div class="achieve-xp">+${ach.xp || rarityXP[ach.rarity] || 50} XP</div>
+            ${dateFormatted ? `<div style="font-size: 0.7rem; color: #27ae60; margin-top: 4px;">📅 Sbloccato il: ${dateFormatted}</div>` : ''}
+          </div>
+          <div>
+            ${isUnlocked 
+              ? `<span style="font-size: 1.2rem;" title="Sbloccato!">✅</span>`
+              : `<button class="achieve-btn" onclick="unlockAchievement('${key}')">Sblocca 🔓</button>`
+            }
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      updateCoupleLevel(totalXP);
+    }
 
     function updateCoupleLevel(totalXP) {
       const xpPerLevel = 500;
@@ -1642,11 +1641,11 @@
     }
 
     function unlockAchievement(key) {
-  database.ref(`coupleAchievements/${key}`).update({
-    unlocked: true,
-    unlockedAt: Date.now()
-  });
-}
+      database.ref(`coupleAchievements/${key}`).update({
+        unlocked: true,
+        unlockedAt: Date.now()
+      });
+    }
 
     function toggleAchieveForm() {
       document.getElementById("newAchieveForm").classList.toggle("active");
@@ -1720,7 +1719,7 @@
     function animatePetBounce() {
       const imgElement = document.getElementById("petAvatarImg");
       imgElement.classList.remove("bounce");
-      void imgElement.offsetWidth; // Force Reflow
+      void imgElement.offsetWidth;
       imgElement.classList.add("bounce");
     }
 
@@ -2104,53 +2103,52 @@
         if (item.y > canvas.height) items.splice(i, 1);
       }
     }
-  </script>
-  <script>
-  // Registrazione del Service Worker e richiesta permessi notifiche
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/firebase-messaging-sw.js')
-        .then((registration) => {
-          console.log('Service Worker registrato con successo:', registration.scope);
-        })
-        .catch((err) => {
-          console.log('Registrazione Service Worker fallita:', err);
-        });
-    });
-  }
 
-  // Funzione da collegare a un tuo pulsante "Attiva Notifiche"
-  function attivaNotifiche(nomeUtente) {
-    Notification.requestPermission().then((permission) => {
-      if (permission === 'granted') {
-        const messaging = firebase.messaging();
-        // Inserisci qui la tua chiave VAPID generata dalla console Firebase
-        messaging.getToken({ vapidKey: 'BCIlKstvvGzBfffdXFS9oPpBiQ2sGIwKFUUzoV9GUqQsHjrUMo9-WFbKsq2UfVk2NsuJCJI5O24-QHp-I52fnz8' })
-          .then((currentToken) => {
-            if (currentToken) {
-              // Salva il token sul Realtime Database associato all'utente
-              database.ref(`fcmTokens/${nomeUtenedte}`).set(currentToken);
-              alert("Notifiche attivate con successo! Riceverete i promemoria sul telefono 🔔");
-            } else {
-              console.warn('Nessun token di registrazione disponibile.');
-            }
-          }).catch((err) => {
-            console.error('Errore durante il recupero del token.', err);
-          });
-      } else {
-        alert("Hai negato i permessi per le notifiche.");
+    // 7. GESTIONE NOTIFICHE WEB & SERVICE WORKER
+    function requestNotificationPermission() {
+      if (!('Notification' in window)) {
+        alert('Il tuo browser non supporta le notifiche web.');
+        return;
       }
-    });
-  }
-</script>
-<script>
+
+      Notification.requestPermission().then((permission) => {
+        if (permission === 'granted') {
+          sendTestNotification();
+        } else if (permission === 'denied') {
+          alert('Hai bloccato le notifiche! Puoi riabilitarle dalle impostazioni del browser sul tuo telefono.');
+        } else {
+          alert('Permesso non concesso.');
+        }
+      });
+    }
+
+    function sendTestNotification() {
+      if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.ready.then((registration) => {
+          registration.showNotification('Tanti Auguri ❤️', {
+            body: 'Le notifiche funzionano alla perfezione! Ciao piccola! ✨',
+            icon: 'icon-192.png',
+            badge: 'icon-192.png',
+            vibrate: [200, 100, 200]
+          });
+        });
+      } else {
+        new Notification('Tanti Auguri ❤️', {
+          body: 'Le notifiche funzionano alla perfezione! ✨',
+          icon: 'icon-192.png'
+        });
+      }
+    }
+
+    // REGISTRAZIONE SERVICE WORKER
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js')
-          .then((reg) => console.log('Service Worker registrato!', reg))
-          .catch((err) => console.log('Errore registrazione Service Worker:', err));
+          .then((reg) => console.log('Service Worker registrato con successo!', reg))
+          .catch((err) => console.log('Errore durante la registrazione del Service Worker:', err));
       });
     }
-</script>
+  </script>
+
 </body>
 </html>

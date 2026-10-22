@@ -1,8 +1,20 @@
 self.addEventListener('install', (event) => {
-  console.log('Service Worker installato con successo');
+  self.skipWaiting();
 });
 
-self.addEventListener('fetch', (event) => {
-  // Gestione base delle richieste di rete
-  event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
+self.addEventListener('activate', (event) => {
+  event.waitUntil(clients.claim());
+});
+
+// Gestione del click sulla notifica ricevuta
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      if (clientList.length > 0) {
+        return clientList[0].focus();
+      }
+      return clients.openWindow('/auguri_speciali/');
+    })
+  );
 });

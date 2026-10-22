@@ -1286,9 +1286,10 @@
   <!-- LEAFLET MAP JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <!-- FIREBASE SCRIPTS -->
+  <!-- FIREBASE SCRIPTS COMPAT -->
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-messaging-compat.js"></script>
 
   <script>
     // 0. MODALE IMMAGINI
@@ -1380,7 +1381,7 @@
       }
     }
 
-    // 2. FIREBASE CONFIG (PROGETTO NUOVO)
+    // 2. FIREBASE CONFIG & INIZIALIZZAZIONE
     const firebaseConfig = {
       apiKey: "AIzaSyCozTnMZIMr_MdZMAUiuIQZ0GcCVIs23fg",
       authDomain: "prova-auguri.firebaseapp.com",
@@ -1394,6 +1395,14 @@
 
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
+
+    // CHIAVE VAPID E FIREBASE MESSAGING
+    const vapidKey = "BNx8_9bJzHIn9H36f6-4S74L4A24H1i3-qI7_4T1-4Z1-4Z1-4Z1-4Z1-4Z1-4Z1-4Z1"; 
+    let messaging = null;
+
+    if (firebase.messaging.isSupported()) {
+      messaging = firebase.messaging();
+    }
 
     // COUNTDOWN & QUOTES
     const startDate = new Date(2026, 5, 14, 20, 27, 0).getTime(); 
@@ -2104,7 +2113,7 @@
       }
     }
 
-    // 7. GESTIONE NOTIFICHE WEB & SERVICE WORKER
+    // 7. GESTIONE NOTIFICHE WEB, FCM TOKEN & SERVICE WORKER
     function requestNotificationPermission() {
       if (!('Notification' in window)) {
         alert('Il tuo browser non supporta le notifiche web.');
@@ -2113,12 +2122,51 @@
 
       Notification.requestPermission().then((permission) => {
         if (permission === 'granted') {
+          getFCMTokenAndSave();
           sendTestNotification();
         } else if (permission === 'denied') {
           alert('Hai bloccato le notifiche! Puoi riabilitarle dalle impostazioni del browser sul tuo telefono.');
         } else {
           alert('Permesso non concesso.');
         }
+      });
+    }
+
+    function getFCMTokenAndSave() {
+      if (!messaging) {
+        console.log("FCM non è supportato in questo browser.");
+        return;
+      }
+
+      navigator.serviceWorker.ready.then((registration) => {
+        messaging.getToken({
+          vapidKey: vapidKey,
+          serviceWorkerRegistration: registration
+        }).then((currentToken) => {
+          if (currentToken) {
+            console.log('FCM Token generato con successo:', currentToken);
+            saveTokenToDatabase(currentToken);
+          } else {
+            console.log('Nessun token di registrazione disponibile. Richiedi i permessi prima.');
+          }
+        }).catch((err) => {
+          console.error('Errore nell\'ottenimento del token FCM:', err);
+        });
+      });
+    }
+
+    function saveTokenToDatabase(token) {
+      // Pulisce il token da caratteri speciali inutilizzabili come chiave primaria Firebase
+      const sanitizedToken = token.replace(/[.#$\[\]]/g, "_");
+      
+      database.ref(`fcmTokens/${sanitizedToken}`).set({
+        token: token,
+        updatedAt: Date.now(),
+        userAgent: navigator.userAgent
+      }).then(() => {
+        console.log("Token salvato nel Realtime Database!");
+      }).catch((err) => {
+        console.error("Errore nel salvataggio del token su DB:", err);
       });
     }
 
@@ -2140,15 +2188,32 @@
       }
     }
 
-    // REGISTRAZIONE SERVICE WORKER
+    // LISTENER NOTIFICHE IN FOREGROUND (App aperta)
+    if (messaging) {
+      messaging.onMessage((payload) => {
+        console.log('Notifica ricevuta in foreground: ', payload);
+        const title = payload.notification ? payload.notification.title : 'Notifica ❤️';
+        const options = {
+          body: payload.notification ? payload.notification.body : '',
+          icon: 'icon-192.png'
+        };
+        new Notification(title, options);
+      });
+    }
+
+    // REGISTRAZIONE SERVICE WORKER E VERIFICA PERMESSI ALL'AVVIO
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js')
-          .then((reg) => console.log('Service Worker registrato con successo!', reg))
+          .then((reg) => {
+            console.log('Service Worker registrato con successo!', reg);
+            if (Notification.permission === 'granted') {
+              getFCMTokenAndSave();
+            }
+          })
           .catch((err) => console.log('Errore durante la registrazione del Service Worker:', err));
       });
     }
   </script>
-
 </body>
 </html>

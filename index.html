@@ -1353,15 +1353,7 @@
     function changeVolume(value) { audioElement.volume = value; }
     audioElement.onended = function() { nextTrack(); };
 
-    document.addEventListener('click', function startAudioOnFirstClick(e) {
-      if (e.target.closest('.music-player')) return;
-      if (!hasStarted) {
-        hasStarted = true;
-        loadTrack(Math.floor(Math.random() * playlist.length));
-        playTrack();
-        document.removeEventListener('click', startAudioOnFirstClick);
-      }
-    });
+    
 
     // 1. NAVIGATION
     function toggleMenu() {
@@ -2144,7 +2136,6 @@
         }).then((currentToken) => {
           if (currentToken) {
             console.log('FCM Token generato con successo:', currentToken);
-            prompt("Ecco il tuo FCM Token! Copialo da qui:", currentToken);
             saveTokenToDatabase(currentToken);
           } else {
             alert('Nessun token generato. Verifica di aver consentito le notifiche.');

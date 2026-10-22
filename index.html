@@ -1493,7 +1493,7 @@
       "Spero non sia cringe tutto questo",
       "Sei la mia redbull gusto zucchero filato e bacini",
       "Questo spazio è tutto per noi, goditelo piccola",
-      "Anche se il nostro cammino dovesse essere come l'odissea, io sono ulisse, non mi arrendo",
+      "Anche se il nosso cammino dovesse essere come l'odissea, io sono ulisse, non mi arrendo",
       "Sono sicuro che per capirci non ci servirebbero nemmeno le parole",
       "Sei ancora più carina di quanto lo sia la tua torta",
       "Ho scritto tutte queste frasi e non sono abbastanza per descrivere il bene che ti voglio",
@@ -2206,12 +2206,12 @@
       });
     }
 
-    // REGISTRAZIONE SERVICE WORKER E VERIFICA PERMESSI ALL'AVVIO
+    // REGISTRAZIONE SERVICE WORKER DEDICATO A FCM
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
+        navigator.serviceWorker.register('firebase-messaging-sw.js')
           .then((reg) => {
-            console.log('Service Worker registrato con successo!', reg);
+            console.log('Firebase Service Worker registrato con successo!', reg);
             if (Notification.permission === 'granted') {
               getFCMTokenAndSave();
             }

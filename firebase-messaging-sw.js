@@ -14,12 +14,13 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
-  console.log('Notifica intercettata dal Service Worker:', payload);
+  // Estrae titolo e testo sia che siano inviati come notification che come data
+  const title = payload.notification?.title || payload.data?.title || 'Notifica ❤️';
+  const body = payload.notification?.body || payload.data?.body || '';
 
-  const title = payload.notification ? payload.notification.title : 'Notifica ❤️';
   const options = {
-    body: payload.notification ? payload.notification.body : '',
-    icon: 'icon-192.png', // Questa è l'icona della tua PWA!
+    body: body,
+    icon: 'icon-192.png',
     badge: 'icon-192.png',
     vibrate: [200, 100, 200]
   };

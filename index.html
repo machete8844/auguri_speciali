@@ -5,12 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tanti Auguri! ❤️</title>
   <!-- Collegamento al Manifest per l'icona su Home -->
-<link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#ff4b5c">
 <!-- Compatibilità iOS per aggiungere alla schermata Home -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Diario">
+<!-- PWA Manifest & Theme -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#e85d75">
+  <link rel="apple-touch-icon" href="icon-192.png">
   <!-- Font Google -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2139,6 +2142,15 @@
       }
     });
   }
+</script>
+<script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then((reg) => console.log('Service Worker registrato!', reg))
+          .catch((err) => console.log('Errore registrazione Service Worker:', err));
+      });
+    }
 </script>
 </body>
 </html>

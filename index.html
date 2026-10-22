@@ -4,7 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tanti Auguri! ❤️</title>
-  
+  <!-- Collegamento al Manifest per l'icona su Home -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#ff4b5c">
+<!-- Compatibilità iOS per aggiungere alla schermata Home -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Diario">
   <!-- Font Google -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1371,14 +1377,14 @@
 
     // 2. FIREBASE CONFIG
     const firebaseConfig = {
-      apiKey: "AIzaSyDjnjz43Qn2vm7cZhVzVHmoPXMIsYWleRM",
-      authDomain: "auguri-compleanno-7ccbc.firebaseapp.com",
-      databaseURL: "https://auguri-compleanno-7ccbc-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "auguri-compleanno-7ccbc",
-      storageBucket: "auguri-compleanno-7ccbc.firebasestorage.app",
-      messagingSenderId: "234250368730",
-      appId: "1:234250368730:web:0a9843eff6d38a811597e3",
-      measurementId: "G-MXHH5MQDLG"
+      apiKey: "AIzaSyCozTnMZIMr_MdZMAUiuIQZ0GcCVIs23fg",
+  authDomain: "prova-auguri.firebaseapp.com",
+  databaseURL: "https://prova-auguri-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "prova-auguri",
+  storageBucket: "prova-auguri.firebasestorage.app",
+  messagingSenderId: "826288183353",
+  appId: "1:826288183353:web:92696d53ebab0d2efe15e8",
+  measurementId: "G-5JEMZ8EC4Q"
     };
 
     firebase.initializeApp(firebaseConfig);
@@ -2096,6 +2102,43 @@
       }
     }
   </script>
+  <script>
+  // Registrazione del Service Worker e richiesta permessi notifiche
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/firebase-messaging-sw.js')
+        .then((registration) => {
+          console.log('Service Worker registrato con successo:', registration.scope);
+        })
+        .catch((err) => {
+          console.log('Registrazione Service Worker fallita:', err);
+        });
+    });
+  }
 
+  // Funzione da collegare a un tuo pulsante "Attiva Notifiche"
+  function attivaNotifiche(nomeUtente) {
+    Notification.requestPermission().then((permission) => {
+      if (permission === 'granted') {
+        const messaging = firebase.messaging();
+        // Inserisci qui la tua chiave VAPID generata dalla console Firebase
+        messaging.getToken({ vapidKey: 'BCIlKstvvGzBfffdXFS9oPpBiQ2sGIwKFUUzoV9GUqQsHjrUMo9-WFbKsq2UfVk2NsuJCJI5O24-QHp-I52fnz8' })
+          .then((currentToken) => {
+            if (currentToken) {
+              // Salva il token sul Realtime Database associato all'utente
+              database.ref(`fcmTokens/${nomeUtenedte}`).set(currentToken);
+              alert("Notifiche attivate con successo! Riceverete i promemoria sul telefono 🔔");
+            } else {
+              console.warn('Nessun token di registrazione disponibile.');
+            }
+          }).catch((err) => {
+            console.error('Errore durante il recupero del token.', err);
+          });
+      } else {
+        alert("Hai negato i permessi per le notifiche.");
+      }
+    });
+  }
+</script>
 </body>
 </html>

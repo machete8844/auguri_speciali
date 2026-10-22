@@ -14,12 +14,12 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
-  console.log('Notifica in background intercettata:', payload);
+  console.log('Notifica intercettata dal Service Worker:', payload);
 
   const title = payload.notification ? payload.notification.title : 'Notifica ❤️';
   const options = {
     body: payload.notification ? payload.notification.body : '',
-    icon: 'icon-192.png',
+    icon: 'icon-192.png', // Questa è l'icona della tua PWA!
     badge: 'icon-192.png',
     vibrate: [200, 100, 200]
   };

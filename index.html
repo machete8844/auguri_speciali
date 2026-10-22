@@ -2124,11 +2124,9 @@
       Notification.requestPermission().then((permission) => {
         if (permission === 'granted') {
           getFCMTokenAndSave();
-          sendTestNotification(); // Ripristinato il test locale immediato!
+          // Abbiamo tolto sendTestNotification() qui dentro per evitare doppi invii all'attivazione
         } else if (permission === 'denied') {
-          alert('Hai bloccato le notifiche! Puoi riabilitarle dalle impostazioni del browser.');
-        } else {
-          alert('Permesso non concesso.');
+          alert('Hai bloccato le notifiche!');
         }
       });
     }
@@ -2185,17 +2183,7 @@
       }
     }
 
-    if (messaging) {
-      messaging.onMessage((payload) => {
-        console.log('Notifica ricevuta in foreground: ', payload);
-        const title = payload.notification ? payload.notification.title : 'Notifica ❤️';
-        const options = {
-          body: payload.notification ? payload.notification.body : '',
-          icon: 'icon-192.png'
-        };
-        new Notification(title, options);
-      });
-    }
+    
 
     // REGISTRAZIONE SERVICE WORKER
     if ('serviceWorker' in navigator) {
